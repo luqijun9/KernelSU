@@ -123,6 +123,10 @@ static int do_report_event(void __user *arg)
 
         // Reset for emulated soft reboot
         services_started = false;
+        // 软重启进入 post-fs-data 阶段时同步重置 ksu_boot_completed，
+        // 在 PackageManagerService 完成扫描前暂停 ksu_prune_allowlist，避免半成品 packages.list 触发误删授权；
+        // 兜底：若后续 EVENT_BOOT_COMPLETED 未到达，仅保持暂停 prune，不会丢失已有授权。
+        ksu_boot_completed = false;
         if (!post_fs_data_lock) {
             post_fs_data_lock = true;
             if (ksu_late_loaded) {
@@ -140,10 +144,17 @@ static int do_report_event(void __user *arg)
             boot_complete_lock = true;
             if (ksu_late_loaded) {
                 pr_info("boot_complete skipped (late load)\n");
+                // late-load 模式下软重启完成，恢复 allowlist prune 开关
+                ksu_boot_completed = true;
             } else {
                 pr_info("boot_complete triggered\n");
                 on_boot_completed();
             }
+        } else {
+            // 二次及以后软重启完成：恢复 ksu_boot_completed 以重新允许卸载应用后的正常 prune，
+            // 但不重复执行 on_boot_completed 其它一次性初始化逻辑
+            ksu_boot_completed = true;
+            pr_info("boot_complete restored after soft reboot\n");
         }
         break;
     }

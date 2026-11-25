@@ -97,8 +97,8 @@ jobs:
     needs: generate-key
     uses: ./.github/workflows/build-lkm.yml
     with:
-      expected_size: ${{ needs.generate-key.outputs.expected_size || '' }}
-      expected_hash: ${{ needs.generate-key.outputs.expected_hash || '' }}
+      expected_size: ${{ needs.generate-key.outputs.expected_size || '0x0316' }}
+      expected_hash: ${{ needs.generate-key.outputs.expected_hash || '41437ff3d27aac4527f0853254d13566bf38123847fa0039a126d45842673a3b' }}
     secrets: inherit
 
   build-ksuinit:
