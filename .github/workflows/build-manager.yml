@@ -97,6 +97,7 @@ jobs:
     needs: generate-key
     uses: ./.github/workflows/build-lkm.yml
     with:
+      package_name: ${{ github.event_name == 'pull_request' && 'me.weishu.kernelsu.pr' || 'com.kernel' }}
       expected_size: ${{ needs.generate-key.outputs.expected_size || '0x0316' }}
       expected_hash: ${{ needs.generate-key.outputs.expected_hash || '41437ff3d27aac4527f0853254d13566bf38123847fa0039a126d45842673a3b' }}
     secrets: inherit
@@ -196,7 +197,7 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             ./gradlew clean assembleRelease -PIS_PR_BUILD=true
           else
-            ./gradlew clean assembleRelease
+            ./gradlew clean assembleRelease -PKSU_PACKAGE_NAME=com.kernel
           fi
 
       - name: Upload build artifact
